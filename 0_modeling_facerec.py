@@ -48,6 +48,7 @@ from core import G
 import log
 import numpy as np
 import face_recognition
+import cv2
 
 import scandir
 from PIL import Image
@@ -97,7 +98,7 @@ class FaceTaskView(gui3d.TaskView):
         self.slow = toolbox.addWidget(gui.CheckBox("Slow Method", False))
         self.rslow = toolbox.addWidget(gui.CheckBox("Really Slow Method", False))
         self.brute = toolbox.addWidget(gui.CheckBox("Bruteforce Method", False))
-        self.random = toolbox.addWidget(gui.CheckBox("Random Method (best)", False))
+        self.random = toolbox.addWidget(gui.CheckBox("Random Method (best)", True))
         self.epoch = toolbox.addWidget(gui.Slider(5, 4, 20,
                                                  ["Epoch rounds (only for random method)", ": %d"]))
         self.iter = toolbox.addWidget(gui.Slider(3, 1, 50,
@@ -106,10 +107,14 @@ class FaceTaskView(gui3d.TaskView):
         self.cam = G.app.modelCamera
         self.human = gui3d.app.selectedHuman
         self.fcount = 0
+        cv2.namedWindow("Face Preview")
 
 
         @self.faceBtn.mhEvent
         def onClicked(event):
+            if self.Dir.directory == '.':
+                log.error("Not a valid reference folder. Aborting...")
+                return
             avg = self.createavg()
             if avg is None:
                 log.error("Not a valid reference folder. Aborting...")
@@ -218,11 +223,14 @@ class FaceTaskView(gui3d.TaskView):
                 if visim is not None:
                     try:
                         visim = PIL.Image.fromarray(visim)
-                        visim.save("mh_vis.jpg")
-                        visim.save('{0:05d}'.format(self.fcount) + ".jpg")
+                        log.notice("show!")
+                        cv2.imshow("Face Preview", cv2.cvtColor(np.asarray(visim), cv2.COLOR_BGR2RGB))
+                        cv2.waitKey()
+                        #visim.save("mh_vis.jpg")
+                        #visim.save('{0:05d}'.format(self.fcount) + ".jpg")
                         self.fcount += 1
                     except Exception as e:
-                        print(e)
+                        log.error(e)
 
 
     def createavg(self):
